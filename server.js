@@ -6,7 +6,7 @@ var moment = require('moment');
 var app = express();
 
 var pool = mysql.createPool({
-	connectionLimit: 15,
+	connectionLimit: 300,
 	host: 'localhost',
 	user: 'root',
 	password: '',
@@ -38,12 +38,16 @@ app.post('/DayZServlet/lud0/find', function (req, res) {
 		} else {
 
 			connection.query('SELECT model,x,y,z,queue FROM player WHERE uid = ?', [req.query.uid], function (err, rows, fields) {
-				if (err) console.log(err);
+				if (err) {
+					console.log(err)
+					res.send('{}');
+					return;
+				} 
 				connection.release();
-	
+		
 				if (rows.length == 0) {
 					console.log('No data found');
-					res.send('');
+					res.send('{}');
 					return;
 				}
 				// Edit result for sending
@@ -51,12 +55,13 @@ app.post('/DayZServlet/lud0/find', function (req, res) {
 				delete rows[0].x;
 				delete rows[0].y;
 				delete rows[0].z;
-	
+		
 				// Calculate queue
 				var queueEnd = moment(rows[0].queue);
 				rows[0].queue = -queueEnd.diff(moment(), 'seconds');
-	
+		
 				res.send(JSON.stringify(rows[0]));
+				
 			});
 		}
 	});
@@ -71,7 +76,11 @@ app.get('/DayZServlet/lud0/load', function (req, res) {
 			res.send('{}');
 		} else {
 			connection.query('SELECT * FROM player WHERE uid = ?', [req.query.uid], function (err, rows, fields) {
-				if (err) console.log(err);
+				if (err) {
+					console.log(err)
+					res.send('{}');
+					return;
+				} 
 				connection.release();
 	
 				if (rows.length == 0) {
@@ -117,8 +126,13 @@ app.post('/DayZServlet/lud0/create', function (req, res) {
 		} else {
 			
 			connection.query('INSERT IGNORE INTO player(uid) VALUES(?)', [req.query.uid], function (err, rows, fields) {
-				if (err) console.log(err);
+				if (err) {
+					console.log(err)
+					res.send('{}');
+					return;
+				} 
 				connection.release();
+				res.send('{}');
 			});
 		}
 	});
@@ -134,8 +148,13 @@ app.post('/DayZServlet/lud0/save', function (req, res) {
 			res.send('{}');
 		} else {
 			connection.query('UPDATE player SET model = ?, alive = ?, items = ?, state = ?, x = ?, z = ?, y = ?, dir_x = ?, dir_y = ?, dir_z = ?, up_0 = ?, up_1 = ?, up_2 = ? WHERE uid = ?', [req.body.model, req.body.alive, JSON.stringify(req.body.items), JSON.stringify(req.body.state), req.body.pos[0], req.body.pos[1], req.body.pos[2], req.body.dir[0], req.body.dir[1], req.body.dir[2], req.body.up[0], req.body.up[1], req.body.up[2], req.query.uid], function (err, rows, fields) {
-				if (err) console.log(err);
+				if (err) {
+					console.log(err)
+					res.send('{}');
+					return;
+				} 
 				connection.release();
+				res.send('{}');
 			});
 		}
 	});
@@ -151,11 +170,20 @@ app.post('/DayZServlet/lud0/queue', function (req, res) {
 				res.send('{}');
 		} else {
 			connection.query('SELECT queue FROM player WHERE uid = ?', [req.query.uid], function (err, rows, fields) {
-				if (err) console.log(err);
+				if (err) {
+					console.log(err)
+					res.send('{}');
+					return;
+				} 
 					var query = 'UPDATE player SET queue = DATE_ADD(CURRENT_TIMESTAMP,INTERVAL ' + mysql.escape(JSON.stringify(req.body.queue)) + ' SECOND) WHERE uid = ?';
 				connection.query(query, [req.query.uid], function (err, rows, fields) {
-					if (err) console.log(err);
+				if (err) {
+					console.log(err)
+					res.send('{}');
+					return;
+				} 
 					connection.release();
+					res.send('{}');
 				});
 			});
 		}
@@ -172,7 +200,11 @@ app.post('/DayZServlet/lud0/kill', function (req, res) {
 			res.send('{}');
 		} else {
 			connection.query('DELETE FROM player WHERE uid = ?', [req.query.uid], function (err, rows, fields) {
-				if (err) console.log(err);
+				if (err) {
+					console.log(err)
+					res.send('{}');
+					return;
+				} 
 				connection.release();
 			});
 		}
@@ -189,7 +221,11 @@ app.post('/DayZServlet/world/add', function (req, res) {
 			res.send('{}');
 		} else {
 			connection.query('INSERT INTO dropped_items(type,imp,mt) VALUES(?,?,?)', [req.body.type, req.body.imp, JSON.stringify(req.body.mt)], function (err, rows, fields) {
-				if (err) console.log(err);
+				if (err) {
+					console.log(err)
+					res.send('{}');
+					return;
+				} 
 				connection.release();
 			});
 		}
@@ -241,7 +277,11 @@ net.createServer(function(sock) {
 				} else{
 
 					connection.query('SELECT ObjectID FROM objects', function (err, rows, fields) {
-						if (err) console.log(err);
+						if (err) {
+							console.log(err)
+							sock.write('Empty');
+							return;
+						} 
 	
 						connection.release();
 	
@@ -277,7 +317,11 @@ net.createServer(function(sock) {
 				} else{
 
 					connection.query('SELECT * FROM objects WHERE ObjectID = ?', [match[1]], function (err, rows, fields) {
-						if (err) console.log(err);
+						if (err) {
+							console.log(err)
+							sock.write('Empty');
+							return;
+						} 
 
 						if (rows.length == 0) {
 							console.log("CREATE "+match[1]+" "+match[2]);
@@ -322,7 +366,11 @@ net.createServer(function(sock) {
 				sock.write('Empty');
 				} else{
 					connection.query('SELECT * FROM objects WHERE ObjectID = ?', [oid], function (err, rows, fields) {
-						if (err) console.log(err);
+						if (err) {
+							console.log(err)
+							sock.write('Empty');
+							return;
+						} 
 						connection.release();
 
 						if (rows.length == 0) {
@@ -356,7 +404,11 @@ net.createServer(function(sock) {
 				sock.write('Empty');
 				} else{
 					connection.query('DELETE FROM objects WHERE ObjectID = ?', [oid], function (err, rows, fields) {
-						if (err) console.log(err);
+						if (err) {
+							console.log(err)
+							sock.write('Empty');
+							return;
+						} 
 						connection.release();
 					});
 					}
