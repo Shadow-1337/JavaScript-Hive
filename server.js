@@ -4,9 +4,10 @@ var bodyParser = require('body-parser');
 var ipfilter = require('ipfilter');
 var moment = require('moment');
 var app = express();
+var sleep = require('sleep');
 
 var pool = mysql.createPool({
-	connectionLimit: 300,
+	connectionLimit: 3000,
 	host: 'localhost',
 	user: 'root',
 	password: '',
@@ -348,6 +349,7 @@ net.createServer(function(sock) {
 				});
 			}
 			sock.write('Ok');
+			sleep.sleep(0.01);
 		}
 
 
@@ -374,7 +376,7 @@ net.createServer(function(sock) {
 						connection.release();
 
 						if (rows.length == 0) {
-							console.log("none");
+							console.log("Could not find object.");
 								sock.write('Empty');
 						} else {
 							var ret = '[["'+rows[0].ObjectID+'","'+rows[0].model+'",'+rows[0].position+'],'+rows[0].items+']';
