@@ -33,8 +33,8 @@ app.post('/DayZServlet/lud0/find', function (req, res) {
 
 	pool.getConnection(function (err, connection) {
 		if (err) {
-				console.log(err)
-				res.send('{}');
+			console.log(err)
+			res.send('{}');
 		} else {
 
 			connection.query('SELECT model,x,y,z,queue FROM player WHERE uid = ?', [req.query.uid], function (err, rows, fields) {
