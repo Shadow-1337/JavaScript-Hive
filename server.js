@@ -8,8 +8,8 @@ var sleep = require('sleep');
 
 var pool = mysql.createPool({
 	connectionLimit: 3000,
-	host: 'localhost',
-	user: 'root',
+	host: '',
+	user: '',
 	password: '',
 	database: 'dayz48'
 });
@@ -28,6 +28,23 @@ exports.start = function () {
 	app.listen(890);
 	console.log('Server running on port 890');
 }
+
+
+function countOcurrences(find,str){
+   return (str.split(find).length - 1)
+}
+
+function IsJsonString(str) {
+	if ((countOcurrences("(",str) == countOcurrences(")",str)) && 
+	    (countOcurrences("[",str) == countOcurrences("]",str)) &&
+	    (countOcurrences("{",str) == countOcurrences("}",str))
+	   ){
+        return true;
+    } else {
+        return false;
+    }
+}
+
 
 app.post('/DayZServlet/lud0/find', function (req, res) {
 	console.log('Got find: ' + req.query.uid);
@@ -48,6 +65,13 @@ app.post('/DayZServlet/lud0/find', function (req, res) {
 		
 				if (rows.length == 0) {
 					console.log('No data found');
+					res.send('{}');
+					return;
+				}
+				
+				if ((rows[0].x == '0') && (rows[0].y == '0') && (rows[0].z == '0'))
+				{
+					console.log('Corrupt data');
 					res.send('{}');
 					return;
 				}
@@ -86,9 +110,23 @@ app.get('/DayZServlet/lud0/load', function (req, res) {
 	
 				if (rows.length == 0) {
 					console.log('No data found');
-					res.send('');
+					res.send('{}');
 					return;
 				}
+				
+				//Check if data is corrupt
+				if (
+				(IsJsonString(rows[0].items) == true) && 
+				(IsJsonString(rows[0].state) == true) &&
+				((rows[0].items).length > 0) &&
+				((rows[0].state).length > 0)
+				)
+				{
+					console.log('Corrupt data');
+					res.send('{}');
+					return;
+				}
+	
 				// Edit result for sending
 				rows[0].items = JSON.parse(rows[0].items);
 				rows[0].state = JSON.parse(rows[0].state);
@@ -105,11 +143,11 @@ app.get('/DayZServlet/lud0/load', function (req, res) {
 				delete rows[0].up_0;
 				delete rows[0].up_1;
 				delete rows[0].up_2;
-	
+		
 				// Calculate queue
 				var queueEnd = moment(rows[0].queue);
 				rows[0].queue = -queueEnd.diff(moment(), 'seconds');
-	
+		
 				//console.log('Sent character data: ' + JSON.stringify(rows[0]));
 				res.send(JSON.stringify(rows[0]));
 			});
