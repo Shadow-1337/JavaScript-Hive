@@ -114,12 +114,13 @@ app.get('/DayZServlet/lud0/load', function (req, res) {
 					return;
 				}
 				
+				
 				//Check if data is corrupt
 				if (
-				(IsJsonString(rows[0].items) == true) && 
-				(IsJsonString(rows[0].state) == true) &&
-				((rows[0].items).length > 0) &&
-				((rows[0].state).length > 0)
+				((IsJsonString(rows[0].items) == false) && 
+				(IsJsonString(rows[0].state) == false)) ||
+				(((rows[0].items).length < 1) ||
+				((rows[0].state).length < 1))
 				)
 				{
 					console.log('Corrupt data');
@@ -231,14 +232,19 @@ app.post('/DayZServlet/lud0/queue', function (req, res) {
 });
 
 app.post('/DayZServlet/lud0/kill', function (req, res) {
-	console.log('Got kill: ' + req.query.uid);
+	if (countOcurrences("?", req.query.uid) == 1){
+		var uid = (req.query.uid).replace('?uid=', '');
+	}else{
+		var uid = req.query.uid;
+	}
+	console.log('Got kill: ' + uid);
 
 	pool.getConnection(function (err, connection) {
 		if (err) {
 			console.log(err)
 			res.send('{}');
 		} else {
-			connection.query('DELETE FROM player WHERE uid = ?', [req.query.uid], function (err, rows, fields) {
+			connection.query('DELETE FROM player WHERE uid = ?', [uid], function (err, rows, fields) {
 				if (err) {
 					console.log(err)
 					res.send('{}');
