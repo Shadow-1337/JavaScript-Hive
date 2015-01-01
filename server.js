@@ -114,7 +114,7 @@ app.get('/DayZServlet/lud0/load', function (req, res) {
 					return;
 				}
 				
-				
+				console.log(rows[0].items);
 				//Check if data is corrupt
 				if (
 				((IsJsonString(rows[0].items) == false) && 
@@ -128,29 +128,24 @@ app.get('/DayZServlet/lud0/load', function (req, res) {
 					return;
 				}
 	
-				// Edit result for sending
-				rows[0].items = JSON.parse(rows[0].items);
-				rows[0].state = JSON.parse(rows[0].state);
-				rows[0].pos = [rows[0].x, rows[0].z, rows[0].y];
-				rows[0].dir = [rows[0].dir_x, rows[0].dir_y, rows[0].dir_z];
-				rows[0].up = [rows[0].up_0, rows[0].up_1, rows[0].up_2];
-				delete rows[0].uid;
-				delete rows[0].x;
-				delete rows[0].y;
-				delete rows[0].z;
-				delete rows[0].dir_x;
-				delete rows[0].dir_y;
-				delete rows[0].dir_z;
-				delete rows[0].up_0;
-				delete rows[0].up_1;
-				delete rows[0].up_2;
-		
+
 				// Calculate queue
 				var queueEnd = moment(rows[0].queue);
 				rows[0].queue = -queueEnd.diff(moment(), 'seconds');
 		
+		
+		
+		
 				//console.log('Sent character data: ' + JSON.stringify(rows[0]));
-				res.send(JSON.stringify(rows[0]));
+				//res.send(JSON.stringify(rows[0]));
+				var loadData = '{"model":"'+rows[0].model+'","alive":'+rows[0].alive+',"queue":'+rows[0].queue+',"pos":['+rows[0].x+','+rows[0].z+','+rows[0].y+'],"items":'+rows[0].items+',"state":'+rows[0].state+',"dir":['+rows[0].dir_x+','+rows[0].dir_y+','+rows[0].dir_z+'],"up":['+rows[0].up_0+','+rows[0].up_1+','+rows[0].up_2+']}';
+				//console.log(loadData);
+				if (IsJsonString(loadData) == true) {
+					res.send(loadData);
+				}else{
+					console.log("Resonce not json!");
+					res.send("{}");
+				}
 			});
 		}
 	});
@@ -186,17 +181,19 @@ app.post('/DayZServlet/lud0/save', function (req, res) {
 		if (err) {
 			console.log(err)
 			res.send('{}');
-		} else {
-			connection.query('UPDATE player SET model = ?, alive = ?, items = ?, state = ?, x = ?, z = ?, y = ?, dir_x = ?, dir_y = ?, dir_z = ?, up_0 = ?, up_1 = ?, up_2 = ? WHERE uid = ?', [req.body.model, req.body.alive, JSON.stringify(req.body.items), JSON.stringify(req.body.state), req.body.pos[0], req.body.pos[1], req.body.pos[2], req.body.dir[0], req.body.dir[1], req.body.dir[2], req.body.up[0], req.body.up[1], req.body.up[2], req.query.uid], function (err, rows, fields) {
-				if (err) {
-					console.log(err)
-					res.send('{}');
-					return;
-				} 
-				connection.release();
-				res.send('{}');
-			});
+			return;
 		}
+				
+		//console.log(JSON.stringify(req.body.items));
+		connection.query('UPDATE player SET model = ?, alive = ?, items = ?, state = ?, x = ?, z = ?, y = ?, dir_x = ?, dir_y = ?, dir_z = ?, up_0 = ?, up_1 = ?, up_2 = ? WHERE uid = ?', [req.body.model, req.body.alive, JSON.stringify(req.body.items), JSON.stringify(req.body.state), req.body.pos[0], req.body.pos[1], req.body.pos[2], req.body.dir[0], req.body.dir[1], req.body.dir[2], req.body.up[0], req.body.up[1], req.body.up[2], req.query.uid], function (err, rows, fields) {
+			if (err) {
+				console.log(err)
+				res.send('{}');
+				return;
+			} 
+			connection.release();
+			res.send('{}');
+		});
 	});
 });
 
